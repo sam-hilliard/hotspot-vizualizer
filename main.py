@@ -39,7 +39,15 @@ def main():
         help="Path to SARIF file"
     )
 
+    parser.add_argument(
+        "--top",
+        type=int,
+        help="Limit the results by n. Overrides default of 10"
+    )
+
     args = parser.parse_args()
+
+    result_limit = args.top or 10
 
     try:
         file_alerts = parse_sarif(args.sarif_file)
@@ -49,13 +57,17 @@ def main():
             return
 
         print("\n=== SARIF Alert Summary ===\n")
+        print(f"[+] Showing top {result_limit} results...")
 
-        for file, count in sorted(
+        sorted_results = sorted(
             file_alerts.items(),
             key=lambda x: x[1],
             reverse=True
-        ):
+        )
+
+        for file, count in sorted_results[:result_limit]:
             print(f"{count:4} alerts | {file}")
+
 
         print(f"\nTotal files affected: {len(file_alerts)}")
         print(f"Total alerts: {sum(file_alerts.values())}")
