@@ -1,7 +1,7 @@
 import argparse
 import json
 from collections import defaultdict
-
+import shutil
 
 def parse_sarif(file_path):
     with open(file_path, 'r', encoding='utf-8') as f:
@@ -28,6 +28,25 @@ def parse_sarif(file_path):
 
     return file_hotspots
 
+def display_output(results, limit):
+    total = len(results)
+    results = results[:limit]
+
+    count_width = 8
+    terminal_width = shutil.get_terminal_size().columns
+    path_width = max(20, terminal_width - count_width - 4)
+
+    print("\n=== Hotspot Summary ===\n")
+    print(f"Showing top {len(results)} of {total:,} files\n")
+
+    print(f"{'Hotspots':>{count_width}}  File")
+    print(f"{'─' * count_width}  {'─' * path_width}")
+
+    for path, hotspots in results:
+        if len(path) > path_width:
+            path = path[:path_width - 1] + "…"
+
+        print(f"{hotspots:>{count_width},}  {path}")
 
 def main():
     parser = argparse.ArgumentParser(
@@ -56,8 +75,6 @@ def main():
             print("No file-level hotspots found.")
             return
 
-        print("\n=== SARIF Hotspot Summary ===\n")
-        print(f"[+] Showing top {result_limit} results...")
 
         sorted_results = sorted(
             file_hotspots.items(),
@@ -65,12 +82,7 @@ def main():
             reverse=True
         )
 
-        for file, count in sorted_results[:result_limit]:
-            print(f"{count:4} hotspots | {file}")
-
-
-        print(f"\nTotal files affected: {len(file_hotspots)}")
-        print(f"Total alerts: {sum(file_hotspots.values())}")
+        display_output(sorted_results, result_limit)
 
     except (FileNotFoundError, json.JSONDecodeError) as e:
         parser.error(str(e))
