@@ -7,7 +7,7 @@ def parse_sarif(file_path):
     with open(file_path, 'r', encoding='utf-8') as f:
         sarif_data = json.load(f)
 
-    file_alerts = defaultdict(int)
+    file_hotspots = defaultdict(int)
 
     for run in sarif_data.get("runs", []):
         for result in run.get("results", []):
@@ -24,14 +24,14 @@ def parse_sarif(file_path):
                 uri = artifact_location.get("uri")
 
                 if uri:
-                    file_alerts[uri] += 1
+                    file_hotspots[uri] += 1
 
-    return file_alerts
+    return file_hotspots
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Count SARIF alerts per file"
+        description="Count SARIF hotspots per file"
     )
 
     parser.add_argument(
@@ -50,27 +50,27 @@ def main():
     result_limit = args.top or 10
 
     try:
-        file_alerts = parse_sarif(args.sarif_file)
+        file_hotspots = parse_sarif(args.sarif_file)
 
-        if not file_alerts:
-            print("No file-level alerts found.")
+        if not file_hotspots:
+            print("No file-level hotspots found.")
             return
 
-        print("\n=== SARIF Alert Summary ===\n")
+        print("\n=== SARIF Hotspot Summary ===\n")
         print(f"[+] Showing top {result_limit} results...")
 
         sorted_results = sorted(
-            file_alerts.items(),
+            file_hotspots.items(),
             key=lambda x: x[1],
             reverse=True
         )
 
         for file, count in sorted_results[:result_limit]:
-            print(f"{count:4} alerts | {file}")
+            print(f"{count:4} hotspots | {file}")
 
 
-        print(f"\nTotal files affected: {len(file_alerts)}")
-        print(f"Total alerts: {sum(file_alerts.values())}")
+        print(f"\nTotal files affected: {len(file_hotspots)}")
+        print(f"Total alerts: {sum(file_hotspots.values())}")
 
     except (FileNotFoundError, json.JSONDecodeError) as e:
         parser.error(str(e))
