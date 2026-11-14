@@ -2,6 +2,7 @@ import argparse
 import json
 from collections import defaultdict
 import shutil
+import yaml
 
 def parse_sarif(file_path):
     with open(file_path, 'r', encoding='utf-8') as f:
@@ -48,6 +49,11 @@ def display_output(results, limit):
 
         print(f"{hotspots:>{count_width},}  {path}")
 
+def output_file(file_path, results):
+    data = {"results": [{"path": path, "hotspot_count": count} for path, count in results]}
+    with open(file_path, 'w') as f:
+        yaml.dump(data, f, default_flow_style=False)
+
 def main():
     parser = argparse.ArgumentParser(
         description="Count SARIF hotspots per file"
@@ -60,8 +66,16 @@ def main():
 
     parser.add_argument(
         "--top",
+        "-t",
         type=int,
         help="Limit the results by n. Overrides default of 10"
+    )
+
+    parser.add_argument(
+        "--out-file",
+        "-o",
+        type=str,
+        help="Output file path for YAML results"
     )
 
     args = parser.parse_args()
@@ -83,6 +97,11 @@ def main():
         )
 
         display_output(sorted_results, result_limit)
+
+        path = args.out_file
+        if path:
+            output_file(path, sorted_results)
+
 
     except (FileNotFoundError, json.JSONDecodeError) as e:
         parser.error(str(e))
