@@ -78,6 +78,13 @@ def main():
         help="Output file path for YAML results"
     )
 
+    parser.add_argument(
+        "--show-all",
+        "-a",
+        action="store_true",
+        help="Displays all results to std out, overriding top limit"
+    )
+
     args = parser.parse_args()
 
     result_limit = args.top or 10
@@ -95,6 +102,9 @@ def main():
             key=lambda x: x[1],
             reverse=True
         )
+
+        if args.show_all:
+            result_limit = len(sorted_results)
 
         display_output(sorted_results, result_limit)
 
