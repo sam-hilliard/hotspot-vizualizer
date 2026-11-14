@@ -3,7 +3,6 @@ import shutil
 import yaml
 from parsers.sarif_parser import parse_sarif
 
-
 def display_output(results, limit):
     total = len(results)
     results = results[:limit]
